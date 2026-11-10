@@ -1,0 +1,37 @@
+generator client{
+    provider = "prisma-client-js"
+}
+
+datasource db{
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+model User{
+    id              String          @id @default(uuid())
+    email           String          @unique
+    passwordHash    String          @map("password_hash")
+    fullName        String          @map("full_name")
+    avatarPath      String?         @map("avatar_path")
+    createdAt       DateTime        @default(now()) @map("created_at")
+    updatedAt       DateTime        @updatedAt @map("updated_at")
+    notes Note[]
+
+    @@map("users")
+}
+
+model Note{
+    id              String          @id @default(uuid())
+    userId          String          @map("user_id")
+    user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+    title           String
+    content         String
+    isPinned        Boolean         @default(false) @map("is_pinned")
+    createdAt       DateTime        @default(now()) @map("created_at")
+    updatedAt       DateTime        @updatedAt @map("updated_at")
+
+    @@index([userId], name: "idx_notes_user_id")
+    @@index([isPinned], name: "idx_notes_is_pinned")
+    @@index([createdAt(sort: Desc)], name: "idx_notes_created_at")
+    @@map("notes")
+}

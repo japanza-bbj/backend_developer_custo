@@ -1,0 +1,51 @@
+services:
+  main:
+    build:
+      context: .
+      target: development
+    command: sh -c "npx prisma db push && npx nest build && node dist/main.js"
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/notes_db?schema=public
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notes_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  studio:
+    build:
+      context: .
+      target: development
+    command: npx prisma studio --port 5555 --browser none
+    ports:
+      - '5555:5555'
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/notes_db?schema=public
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
