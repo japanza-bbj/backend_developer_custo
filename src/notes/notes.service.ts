@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryNotesDto } from './dto/query-notes.dto';
 import { CreateNoteDto } from './dto/create-note.dto';
+import { UpdateNoteDto } from './dto/update-note.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -89,7 +90,7 @@ export class NotesService {
     const note = await this.prisma.note.findFirst({
       where: {
         id,
-        userId, // กรองด้วย userId เพื่อป้องกันไม่ให้ดึงข้อมูลของคนอื่น
+        userId,
       },
     });
 
@@ -106,4 +107,49 @@ export class NotesService {
       updated_at: note.updatedAt,
     };
   }
+
+  async update(userId: string, id: string, dto: UpdateNoteDto) {
+    const note = await this.prisma.note.findFirst({
+      where: { id, userId },
+    });
+
+    if (!note) {
+      throw new NotFoundException('Note not found or access denied');
+    }
+
+    const updatedNote = await this.prisma.note.update({
+      where: { id },
+      data: {
+        ...(dto.title !== undefined && { title: dto.title }),
+        ...(dto.content !== undefined && { content: dto.content }),
+        ...(dto.is_pinned !== undefined && { isPinned: dto.is_pinned }),
+      },
+    });
+
+    return {
+      id: updatedNote.id,
+      title: updatedNote.title,
+      content: updatedNote.content,
+      is_pinned: updatedNote.isPinned,
+      created_at: updatedNote.createdAt,
+      updated_at: updatedNote.updatedAt,
+    };
+  }
+
+  async remove(userId: string, id: string) {
+    const note = await this.prisma.note.findFirst({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    console.log("delete note",note)
+
+    if (!note) {
+      throw new NotFoundException('Note not found');
+    }
+    return  note
+    // await this.prisma.note.delete(note);
+}
 }
