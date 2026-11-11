@@ -144,12 +144,14 @@ export class NotesService {
       },
     });
 
-    console.log("delete note",note)
-
-    if (!note) {
-      throw new NotFoundException('Note not found');
+  if (!note) {
+    throw new NotFoundException('Note not found or access denied');
     }
-    return  note
-    // await this.prisma.note.delete(note);
+
+  await this.prisma.note.delete({
+    where: { id },
+  });
+
+  return { message: 'Note deleted successfully' };
 }
 }

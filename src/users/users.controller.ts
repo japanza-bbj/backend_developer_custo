@@ -32,7 +32,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('me/avatar')
+  @Delete('me/avatar/:id')  
   @HttpCode(HttpStatus.NO_CONTENT)
   removeAvatar(@Request() req) {
     return this.usersService.removeAvatar(req.user.id);

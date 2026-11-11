@@ -3,7 +3,7 @@ services:
     build:
       context: .
       target: development
-    command: sh -c "npx prisma db push && npx nest build && node dist/main.js"
+    command: sh -c "npx prisma db push && npm run start:dev"
     ports:
       - '${APP_PORT:-3000}:3000'
     volumes:
