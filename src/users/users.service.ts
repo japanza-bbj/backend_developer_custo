@@ -41,26 +41,26 @@ export class UsersService {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    if (user.avatarPath && fs.existsSync(user.avatarPath)) {
-      try {
-        fs.unlinkSync(user.avatarPath);
-      } catch (err) {
-        console.error('Failed to delete old avatar:', err);
+    const relativePath = `uploads/avatars/${file.originalname}`;
+
+    if (user.avatarPath) {
+      const oldFilePath = path.join(process.cwd(), user.avatarPath);
+      if (fs.existsSync(oldFilePath)) {
+        try {
+          fs.unlinkSync(oldFilePath);
+        } catch (err) {
+          console.error('Failed to delete old avatar:', err);
+        }
       }
     }
 
-    const fileExtension = path.extname(file.originalname).toLowerCase() || '.jpg';
-    const newFileName = `${crypto.randomUUID()}${fileExtension}`;    
-    const filePath = path.join(uploadDir, newFileName);
-    fs.writeFileSync(filePath, file.buffer);
-
     await this.prisma.user.update({
       where: { id: userId },
-      data: { avatarPath: filePath },
+      data: { avatarPath: relativePath },
     });
 
     return {
-      avatar_url: '/api/v1/users/me/avatar',
+      avatar_url: relativePath,
     };
   }
 
@@ -68,11 +68,15 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('ไม่พบข้อมูลผู้ใช้งาน');
 
-    if (user.avatarPath && fs.existsSync(user.avatarPath)) {
-      try {
-        fs.unlinkSync(user.avatarPath);
-      } catch (err) {
-        console.error('Failed to delete avatar file:', err);
+    if (user.avatarPath) {
+      const filePath = path.join(process.cwd(), user.avatarPath);
+
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (err) {
+          console.error('Failed to delete avatar file:', err);
+        }
       }
     }
 
@@ -80,5 +84,8 @@ export class UsersService {
       where: { id: userId },
       data: { avatarPath: null },
     });
+
+    return { message: 'Avatar deleted successfully' };
+
+    }
   }
-}

@@ -23,6 +23,7 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/avatar')
+  @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
   uploadAvatar(
     @Request() req,
@@ -32,9 +33,9 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('me/avatar/:id')  
+  @Delete('me/avatar')  
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeAvatar(@Request() req) {
+  async removeAvatar(@Request() req) {
     return this.usersService.removeAvatar(req.user.id);
   }
 }
